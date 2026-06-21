@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+@layer base {
+  html { font-size: 18px; }
+  body { font-family: 'Inter', sans-serif; color: #1a1a1a; }
+  h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; }
+}
