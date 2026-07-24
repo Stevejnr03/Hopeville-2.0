@@ -7,95 +7,14 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
+
+import {team, values, milestones, stats}from "../data/about";
+
 import pageBg from "../assets/page-bg.png";
-import abtImg from "../assets/visit-us.png";
+import abtImg from "../assets/abt.png";
 
 function About() {
-  const team = [
-    {
-      name: "Dr. John Doe",
-      title: "Chief Optometrist",
-      specialty: "Retinal Evaluation & Diagnostics",
-      image: null,
-    },
-    {
-      name: "Dr. Jane Smith",
-      title: "Ophthalmologist",
-      specialty: "Cataract & Glaucoma Management",
-      image: null,
-    },
-    {
-      name: "Dr. Michael Eze",
-      title: "Optometrist",
-      specialty: "Pediatric & Geriatric Vision Care",
-      image: null,
-    },
-    {
-      name: "Dr. Amaka Obi",
-      title: "Optical Specialist",
-      specialty: "Luxury Eyewear & Lens Consultation",
-      image: null,
-    },
-  ];
-
-  const values = [
-    {
-      icon: <Eye size={28} strokeWidth={1.2} />,
-      title: "Clinical Excellence",
-      desc: "We uphold the highest standards of eye care through continuous training, advanced diagnostics, and evidence-based treatment.",
-    },
-    {
-      icon: <Heart size={28} strokeWidth={1.2} />,
-      title: "Patient-First Care",
-      desc: "Every decision we make is centered on the comfort, safety, and satisfaction of our patients and their families.",
-    },
-    {
-      icon: <Award size={28} strokeWidth={1.2} />,
-      title: "Integrity & Trust",
-      desc: "We believe in transparent communication, honest diagnoses, and building lasting relationships with every patient.",
-    },
-    {
-      icon: <Users size={28} strokeWidth={1.2} />,
-      title: "Community Impact",
-      desc: "We are committed to improving eye health across Port Harcourt through outreach, education, and accessible care.",
-    },
-  ];
-
-  const milestones = [
-    {
-      year: "2008",
-      title: "Founded",
-      desc: "Hopeville Eye Clinic was established in Port Harcourt with a mission to deliver world-class eye care.",
-    },
-    {
-      year: "2012",
-      title: "Expanded Services",
-      desc: "Added surgical co-management services for cataract and glaucoma patients.",
-    },
-    {
-      year: "2016",
-      title: "Luxury Eyewear Launch",
-      desc: "Launched our premium eyewear boutique featuring international optical brands.",
-    },
-    {
-      year: "2020",
-      title: "Digital Eye Health",
-      desc: "Introduced digital eye health diagnostics and telemedicine consultations.",
-    },
-    {
-      year: "2024",
-      title: "New Facility",
-      desc: "Moved into our state-of-the-art facility at #64 Alcon Road, Woji.",
-    },
-  ];
-
-  const stats = [
-    { number: "15+", label: "Years of Excellence" },
-    { number: "10k+", label: "Patients Served" },
-    { number: "9+", label: "Specialist Services" },
-    { number: "5★", label: "Patient Rating" },
-  ];
-
+  
   return (
     <main className="bg-white">
       {/* ── HERO ── */}
@@ -120,17 +39,12 @@ function About() {
 
         {/* Content */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16 pt-40 relative z-10 w-full">
-          <p
-            className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-4"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          >
-            Our Story
-          </p>
+          
           <h1
             className="text-4xl md:text-6xl font-light text-white leading-tight max-w-2xl"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
           >
-            Caring for Your Vision
+           Our Story
           </h1>
         </div>
       </section>
@@ -148,10 +62,10 @@ function About() {
               />
 
               {/* Overlay */}
-              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="absolute inset-0 bg-black/15"></div>
             </div>
 
-            {/* Stats overlay */}
+            {/* Stats overlay
             <div className="absolute bottom-8 right-8 bg-white shadow-xl p-6 w-48">
               <p
                 className="text-4xl font-light text-[#4A7E96] mb-1"
@@ -162,7 +76,7 @@ function About() {
               <p className="text-xs text-[#888] tracking-[0.15em] uppercase">
                 Years of Excellence
               </p>
-            </div>
+            </div> */}
           </div>
           {/* Left */}
           <div>
@@ -178,13 +92,13 @@ function About() {
             >
               Where Precision Meets Luxury Vision Care
             </h2>
-            <p className="text-[#555] text-base md:text-lg leading-relaxed mb-5 font-light">
+            <p className="text-[#555] text-base  leading-relaxed mb-5 font-light">
               At Hopeville Eye Clinic, we believe exceptional eye care should be
               both medically rigorous and elegantly delivered. For over 15
               years, we have served the Port Harcourt community with clinical
               excellence and a warm, patient-first approach.
             </p>
-            <p className="text-[#555] text-base md:text-lg leading-relaxed mb-8 font-light">
+            <p className="text-[#555] text-base  leading-relaxed mb-8 font-light">
               Our team of dedicated vision specialists combines cutting-edge
               diagnostics with a genuine passion for preserving and enhancing
               your sight — because we understand that your eyes are your window
@@ -238,13 +152,15 @@ function About() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value) => (
-              <div
-                key={value.title}
-                className="bg-white p-8 md:p-10 border border-[#e8e8e8] hover:border-[#4A7E96] hover:shadow-lg transition-all duration-300 group"
-              >
+            {values.map((value) => { 
+              const Icon = value.icon; 
+              return (
+                <div
+                  key={value.title}
+                  className="bg-white p-8 md:p-10 border border-[#e8e8e8] hover:border-[#4A7E96] hover:shadow-lg transition-all duration-300 group"
+                >
                 <div className="text-[#4A7E96] mb-5 group-hover:scale-110 transition-transform duration-300">
-                  {value.icon}
+                  <Icon size={28} strokeWidth={1.2} />
                 </div>
                 <h3
                   className="text-lg md:text-xl font-medium text-[#1a1a1a] mb-3"
@@ -256,7 +172,7 @@ function About() {
                   {value.desc}
                 </p>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>

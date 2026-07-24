@@ -14,47 +14,28 @@ import {
 } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 
-import hero1 from "../assets/hero-1.jpg";
-import hero2 from "../assets/hero-2.jpg";
-import hero3 from "../assets/hero-3.jpg";
+import { slides, steps, testimonials, partners, ctaSlides } from "../data/home";
 import aboutImg from "../assets/building.jpg";
 import services from "../data/services";
 import ServiceIcon from "../components/ServiceIcon";
-import products from "../data/products";
-import blogs from "../data/blogs";
-
-const slides = [
-  {
-    tag: "Advanced Eye Care",
-    heading: "Your Vision Care Is",
-    highlight: "Our Top Priority",
-    sub: "From comprehensive diagnostics to surgical co-management, our specialists deliver world-class eye care tailored to your unique needs.",
-    image: hero2,
-  },
-  {
-    tag: "Luxury Eyewear Collection",
-    heading: "See the World",
-    highlight: "Clearly & Beautifully",
-    sub: "Hopeville Eye Clinic offers comprehensive eye health care combined with a curated collection of luxury eyewear — all in one place.",
-    image: hero1,
-  },
-
-  {
-    tag: "Luxury Eyewear Collection",
-    heading: "Frames That Define",
-    highlight: "Your Signature Style",
-    sub: "Explore our curated collection of premium eyewear from the world's finest optical brands — crafted for those who demand excellence.",
-    image: hero3,
-  },
-];
+import { productService } from "../services/productService";
+import { blogService } from "../services/blogService";
 
 function Home() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
 
+  // Mini shop state
+
+  const [products, setProducts] = useState([]);
+
   // Testimonial slider state
   const [tCurrent, setTCurrent] = useState(0);
   const [tAnimating, setTAnimating] = useState(false);
+
+  // Mini Blog
+
+  const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -84,7 +65,7 @@ function Home() {
   useEffect(() => {
     const timer = setInterval(() => {
       goNext();
-    }, 6000);
+    }, 12000);
     return () => clearInterval(timer);
   }, [current]);
 
@@ -104,60 +85,31 @@ function Home() {
     }, 400);
   }
 
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const data = await productService.getAll();
+        setProducts(data);
+      } catch (err) {
+        setError("Failed to load products");
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    async function fetchBlogs() {
+      try {
+        const data = await blogService.getAll();
+        setBlogs(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchBlogs();
+  }, []);
+
   const slide = slides[current];
-
-  const steps = [
-    {
-      step: "01",
-      title: "Book Appointment",
-      desc: "Schedule your visit online or by phone at your convenience.",
-    },
-    {
-      step: "02",
-      title: "Consultation",
-      desc: "Meet with our specialist for an in-depth discussion of your vision concerns.",
-    },
-    {
-      step: "03",
-      title: "Diagnosis",
-      desc: "Undergo a comprehensive eye examination using advanced diagnostic tools.",
-    },
-    {
-      step: "04",
-      title: "Treatment & Care",
-      desc: "Receive a personalized treatment plan tailored to your specific needs.",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Adaeze O.",
-      rating: 5,
-      text: "The most thorough eye examination I have ever had. The staff were incredibly professional and the facility is world class.",
-      title: "Verified Patient",
-    },
-    {
-      name: "Emeka T.",
-      rating: 5,
-      text: "Hopeville transformed my vision and my confidence. The luxury eyewear collection is absolutely stunning.",
-      title: "Verified Patient",
-    },
-    {
-      name: "Fatima A.",
-      rating: 5,
-      text: "From booking to diagnosis, the entire experience was seamless. I highly recommend Hopeville to everyone.",
-      title: "Verified Patient",
-    },
-  ];
-
-  const partners = [
-    "Essilor",
-    "Zeiss",
-    "Ray-Ban",
-    "Oakley",
-    "Rodenstock",
-    "Hoya",
-  ];
 
   return (
     <main>
@@ -280,13 +232,13 @@ function Home() {
             >
               Where Precision Meets Luxury Vision Care
             </h2>
-            <p className="text-[#444] text-lg leading-relaxed mb-6 font-light">
+            <p className="text-[#444] text-base leading-relaxed mb-6 font-light">
               At Hopeville Eye Clinic, we believe exceptional eye care should be
               both medically rigorous and elegantly delivered. For over 15
               years, we have served the Port Harcourt community with clinical
               excellence and a warm, patient-first approach.
             </p>
-            <p className="text-[#444] text-lg leading-relaxed mb-10 font-light">
+            <p className="text-[#444] text-base leading-relaxed mb-10 font-light">
               Our team of dedicated vision specialists combines cutting-edge
               diagnostics with a genuine passion for preserving and enhancing
               your sight.
@@ -294,7 +246,7 @@ function Home() {
             <div className="flex flex-col gap-3 mb-10">
               {[
                 "Certified Vision Specialists",
-                "State-of-the-art Diagnostic Equipment",
+                "Top Notch Diagnostic Equipment",
                 "Luxury Eyewear Boutique On-site",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
@@ -474,30 +426,6 @@ function Home() {
       <section className="bg-[#0d1f2d] py-24 overflow-hidden relative">
         {/* CTA Slides */}
         {(() => {
-          const ctaSlides = [
-            {
-              tag: "Take The First Step",
-              heading: "Your Vision Deserves Expert Care",
-              sub: "Schedule a comprehensive eye examination with our specialists today. Early detection saves sight.",
-              cta: "Book Appointment",
-              link: "/book",
-            },
-            {
-              tag: "Luxury Eyewear",
-              heading: "Find Your Perfect Frame",
-              sub: "Explore our curated collection of premium eyewear from the world's most prestigious optical brands.",
-              cta: "Shop Now",
-              link: "/shop",
-            },
-            {
-              tag: "Expert Specialists",
-              heading: "World-Class Eye Care in Port Harcourt",
-              sub: "Our team of certified vision specialists is dedicated to preserving and enhancing your sight.",
-              cta: "Meet Our Team",
-              link: "/about",
-            },
-          ];
-
           const [ctaCurrent, setCtaCurrent] = useState(0);
           const [ctaAnimating, setCtaAnimating] = useState(false);
 
@@ -535,7 +463,7 @@ function Home() {
                     </h2>
                   </div>
                   <div className="flex flex-col gap-6">
-                    <p className="text-white/80 text-base md:text-lg font-light leading-relaxed">
+                    <p className="text-white/80 text-base  font-light leading-relaxed">
                       {ctaSlide.sub}
                     </p>
                     <div className="flex items-center gap-4 flex-wrap">
@@ -651,75 +579,88 @@ function Home() {
         </div>
       </section>
 
-     {/* ── 9. BLOGS ── */}
-<section className="bg-[#f8f8f6] py-16 md:py-28">
-  <div className="max-w-7xl mx-auto px-4 md:px-8">
-    <div className="text-center mb-16">
-      <p className="text-[#B5685A] text-sm tracking-[0.3em] uppercase mb-4"
-        style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-        Eye Health Insights
-      </p>
-      <h2 className="text-3xl md:text-4xl font-light text-[#1a1a1a]"
-        style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-        Latest From Our Blog
-      </h2>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {blogs.slice(0, 3).map((blog) => (
-        <Link
-          key={blog.id}
-          to={`/blog/${blog.slug}`}
-          className="group bg-white hover:shadow-lg transition-all duration-300">
-
-          {/* Image */}
-          <div className="aspect-[4/3] overflow-hidden relative">
-            <img
-              src={blog.image}
-              alt={blog.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute top-4 left-4">
-              <span className="bg-white text-[#B5685A] text-xs px-3 py-1 tracking-[0.1em] uppercase border border-[#B5685A]">
-                {blog.category}
-              </span>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 md:p-8 border border-t-0 border-[#e8e8e8]">
-            <p className="text-[#aaa] text-xs mb-3">{blog.date}</p>
-            <h3 className="text-xl md:text-2xl font-light text-[#1a1a1a] leading-snug mb-3 group-hover:text-[#4A7E96] transition-colors duration-300"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-              {blog.title}
-            </h3>
-            <p className="text-[#666] text-sm leading-relaxed font-light mb-5 line-clamp-2">
-              {blog.excerpt}
+      {/* ── 9. BLOGS ── */}
+      <section className="bg-[#f8f8f6] py-16 md:py-28">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-16">
+            <p
+              className="text-[#B5685A] text-sm tracking-[0.3em] uppercase mb-4"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              Eye Health Insights
             </p>
-            <div className="flex items-center gap-2 text-[#4A7E96] text-xs tracking-[0.1em] uppercase font-medium group-hover:text-[#B5685A] transition-colors duration-200"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-              Read More
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
-            </div>
+            <h2
+              className="text-3xl md:text-4xl font-light text-[#1a1a1a]"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              Latest From Our Blog
+            </h2>
           </div>
-        </Link>
-      ))}
-    </div>
 
-    <div className="text-center mt-14">
-      <Link to="/blog"
-        className="border border-[#4A7E96] text-[#4A7E96] px-10 py-4 text-sm tracking-[0.15em] uppercase hover:bg-[#4A7E96] hover:text-white transition-all duration-300 inline-block font-medium"
-        style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-        View All Posts
-      </Link>
-    </div>
-  </div>
-</section>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {blogs.slice(0, 3).map((blog) => (
+              <Link
+                key={blog.id}
+                to={`/blog/${blog.slug}`}
+                className="group bg-white hover:shadow-lg transition-all duration-300"
+              >
+                {/* Image */}
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img
+                    src={blog.image_url}
+                    alt={blog.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white text-[#B5685A] text-xs px-3 py-1 tracking-[0.1em] uppercase border border-[#B5685A]">
+                      {blog.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 md:p-8 border border-t-0 border-[#e8e8e8]">
+                  <p className="text-[#aaa] text-xs mb-3">{blog.date}</p>
+                  <h3
+                    className="text-xl md:text-2xl font-light text-[#1a1a1a] leading-snug mb-3 group-hover:text-[#4A7E96] transition-colors duration-300"
+                    style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  >
+                    {blog.title}
+                  </h3>
+                  <p className="text-[#666] text-sm leading-relaxed font-light mb-5 line-clamp-2">
+                    {blog.excerpt}
+                  </p>
+                  <div
+                    className="flex items-center gap-2 text-[#4A7E96] text-xs tracking-[0.1em] uppercase font-medium group-hover:text-[#B5685A] transition-colors duration-200"
+                    style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  >
+                    Read More
+                    <ArrowRight
+                      size={14}
+                      className="group-hover:translate-x-1 transition-transform duration-200"
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-14">
+            <Link
+              to="/blog"
+              className="border border-[#4A7E96] text-[#4A7E96] px-10 py-4 text-sm tracking-[0.15em] uppercase hover:bg-[#4A7E96] hover:text-white transition-all duration-300 inline-block font-medium"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              View All Posts
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ── 10. FEATURED PARTNERS ── */}
 
       <section className="bg-white py-16 border-t border-[#e8e8e8] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10 text-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 mb-14 text-center">
           <p
             className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-3"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
@@ -738,13 +679,12 @@ function Home() {
         <div className="relative flex overflow-hidden">
           <div className="flex gap-16 animate-marquee whitespace-nowrap">
             {[...partners, ...partners].map((partner, i) => (
-              <span
+              <img
                 key={i}
-                className="text-xl md:text-2xl font-light text-[#aaa] hover:text-[#4A7E96] transition-colors duration-200 tracking-[0.25em] uppercase cursor-pointer shrink-0"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                {partner}
-              </span>
+                src={partner}
+                alt={`Partner logo ${i + 1}`}
+                className="h-9 md:h-11 w-auto object-contain shrink-0 opacity-70 hover:grayscale-0 hover:opacity-100 transition-opacity duration-300"
+              />
             ))}
           </div>
         </div>

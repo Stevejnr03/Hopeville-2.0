@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/hope-logo.png";
 import { Menu, X, Heart, ShoppingBag, User } from "lucide-react";
+import { useShop } from "../context/ShopContext";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +16,8 @@ function Navbar() {
     { name: "Blog", path: "/blog" },
     { name: "Contact", path: "/contact" },
   ];
+
+  const { cartCount, wishlist } = useShop();
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-[#e8e0d5]">
@@ -47,16 +50,28 @@ function Navbar() {
           <div className="flex items-center gap-4 border-r border-[#d0c8be] pr-5">
             <Link
               to="/wishlist"
-              className="text-[#1a1a1a] hover:text-[#B5685A] transition-colors duration-200"
+              className={`transition-colors duration-200 hover:text-[#B5685A] relative ${scrolled}`}
             >
               <Heart size={20} strokeWidth={1.5} />
+              {wishlist.length > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#B5685A] text-white text-[10px] flex items-center justify-center rounded-full">
+                  {wishlist.length}
+                </span>
+              )}
             </Link>
+
             <Link
               to="/cart"
-              className="text-[#1a1a1a] hover:text-[#B5685A] transition-colors duration-200"
+              className={`transition-colors duration-200 hover:text-[#B5685A] relative ${scrolled}`}
             >
               <ShoppingBag size={20} strokeWidth={1.5} />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#B5685A] text-white text-[10px] flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
             </Link>
+
             <Link
               to="/login"
               className="text-[#1a1a1a] hover:text-[#B5685A] transition-colors duration-200"

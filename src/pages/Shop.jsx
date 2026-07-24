@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "../components/ProductCard";
-import products from "../data/products";
-const allProducts = products;
+import { productService } from "../services/productService";
+import Pagination from "../components/Pagination";
 
 import { Link } from "react-router-dom";
 
@@ -10,9 +10,34 @@ const shapes = ["Aviator", "Cat Eye", "Rectangle", "Round"];
 const categories = ["Eyeglasses", "Sunglasses"];
 
 function Shop() {
+  const [allProducts, setAllProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const [error, setError] = useState("");
+
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const data = await productService.getAll();
+        setAllProducts(data);
+      } catch (err) {
+        setError("Failed to load products");
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedShapes, selectedCategories]);
 
   function toggleShape(shape) {
     setSelectedShapes((prev) =>
@@ -39,6 +64,44 @@ function Shop() {
       selectedCategories.includes(p.category);
     return shapeMatch && categoryMatch;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  if (loadingProducts)
+    return (
+      <main className="bg-white min-h-screen pt-24 flex items-center justify-center">
+        <svg
+          className="animate-spin w-8 h-8 text-[#4A7E96]"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8z"
+          />
+        </svg>
+      </main>
+    );
+
+  if (error)
+    return (
+      <main className="bg-white min-h-screen pt-24 flex items-center justify-center">
+        <p className="text-[#B5685A]">{error}</p>
+      </main>
+    );
 
   return (
     <main className="bg-white min-h-screen pt-24">
@@ -208,8 +271,8 @@ function Shop() {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 md:gap-y-14">
-            {filtered.map((product) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 md:gap-y-14 mb-6 md:mb-10">
+            {paginated.map((product) => (
               <Link key={product.id} to={`/shop/${product.slug}`}>
                 <ProductCard
                   name={product.name}
@@ -222,10 +285,20 @@ function Shop() {
               </Link>
             ))}
           </div>
-
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              window.scrollTo({ top: 0, behavior: "smooth" }); // scroll to top on page change
+            }}
+            label="products"
+          />
           {filtered.length === 0 && (
             <div className="text-center py-24">
-              <p className="text-[#888] text-base md:text-lg">
+              <p className="text-[#888] text-base ">
                 No products match your filters.
               </p>
               <button

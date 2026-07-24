@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { productService } from "../services/productService";
 import {
   Heart,
   ShoppingBag,
@@ -14,38 +15,91 @@ import {
   Minus,
   Camera,
 } from "lucide-react";
-import products from "../data/products";
 import ProductCard from "../components/ProductCard";
 import TryOn from "../components/TryOn";
+import { useShop } from "../context/ShopContext";
 
 function ProductDetail() {
   const { slug } = useParams();
-  const product = products.find((p) => p.slug === slug);
+  const [product, setProduct] = useState(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedLens, setSelectedLens] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [wishlist, setWishlist] = useState(false);
   const [added, setAdded] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [showTryOn, setShowTryOn] = useState(false);
 
-  const suggested = products
-    .filter(
-      (p) =>
-        p.slug !== slug &&
-        (p.category === product?.category || p.shape === product?.shape),
-    )
-    .slice(0, 4);
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } =
+    useShop();
 
-  const fallbackSuggested = products.filter((p) => p.slug !== slug).slice(0, 4);
-  const relatedProducts = suggested.length >= 2 ? suggested : fallbackSuggested;
+  useEffect(() => {
+    async function fetchProduct() {
+      setLoadingProduct(true);
+      try {
+        const data = await productService.getBySlug(slug);
+        setProduct(data);
+      } catch (err) {
+        console.error(err);
+        setProduct(null);
+      } finally {
+        setLoadingProduct(false);
+      }
+    }
+    fetchProduct();
+  }, [slug]);
 
-  function handleAddToCart() {
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2500);
+  useEffect(() => {
+    if (!product) return;
+
+    async function fetchRelated() {
+      try {
+        const all = await productService.getAll();
+        const suggested = all
+          .filter(
+            (p) =>
+              p.slug !== slug &&
+              (p.category === product.category || p.shape === product.shape),
+          )
+          .slice(0, 4);
+        const fallback = all.filter((p) => p.slug !== slug).slice(0, 4);
+        setRelatedProducts(suggested.length >= 2 ? suggested : fallback);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchRelated();
+  }, [product, slug]);
+
+  if (loadingProduct) {
+    return (
+      <main className="bg-white min-h-screen pt-24 flex items-center justify-center">
+        <svg
+          className="animate-spin w-8 h-8 text-[#4A7E96]"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8z"
+          />
+        </svg>
+      </main>
+    );
   }
 
+  // Null check SECOND — before anything tries to use product.id
   if (!product) {
     return (
       <main className="bg-white min-h-screen pt-40 text-center px-4">
@@ -60,6 +114,29 @@ function ProductDetail() {
         </Link>
       </main>
     );
+  }
+
+  // ✅ Now it's SAFE to use product.id — product is guaranteed to exist here
+  const inWishlist = isInWishlist(product.id);
+
+  function handleAddToCart() {
+    const colorName = product.colors?.[0]?.name || "Default";
+  const lensName = product.lensOptions?.[0] || "Standard";
+    addToCart(
+      product,
+      colorName,
+      lensName
+    );
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2500);
+  }
+
+  function handleWishlist() {
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   }
 
   const accordionSections = [
@@ -150,187 +227,153 @@ function ProductDetail() {
   ];
 
   return (
-    <main className="bg-white pt-24">
-      
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
-        <button
-                onClick={() => setShowTryOn(true)}
-                className="inline-flex py-4 mb-8 text-sm tracking-[0.15em] uppercase font-medium border border-[#e8e8e8] text-[#1a1a1a] hover:border-[#4A7E96] hover:text-[#4A7E96] transition-all duration-300 flex items-center justify-left gap-3 px-8 cursor-pointer"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                <Camera size={16} strokeWidth={1.5} />
-                Live Try-On
-              </button>
+  <main className="bg-white pt-24 md:pt-10">
+
+    {/* Breadcrumb — compact, at very top */}
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 border-b border-[#f0f0f0]">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-[#888] tracking-wide">
-          <Link to="/" className="hover:text-[#4A7E96] transition-colors">
-            Home
-          </Link>
+          <Link to="/" className="hover:text-[#4A7E96] transition-colors">Home</Link>
           <span>/</span>
-          <Link to="/shop" className="hover:text-[#4A7E96] transition-colors">
-            Shop
-          </Link>
+          <Link to="/shop" className="hover:text-[#4A7E96] transition-colors">Shop</Link>
           <span>/</span>
-          <span className="text-[#1a1a1a]">{product.name}</span>
+          <span className="text-[#1a1a1a] truncate max-w-[200px]">{product.name}</span>
         </div>
+        {/* Try-On button moved to breadcrumb row */}
+        <button
+          onClick={() => setShowTryOn(true)}
+          className="hidden sm:flex items-center gap-2 text-xs tracking-[0.15em] uppercase border border-[#e8e8e8] text-[#1a1a1a] hover:border-[#4A7E96] hover:text-[#4A7E96] transition-all duration-300 px-4 py-2">
+          <Camera size={13} strokeWidth={1.5} />
+          Live Try-On
+        </button>
       </div>
+    </div>
 
-      {/* ── MAIN PRODUCT SECTION ── */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
-          {/* LEFT — Images */}
-          <div className="flex flex-col gap-4">
-            {/* Main Image */}
-            <div className="relative bg-[#f8f8f6] aspect-square flex items-center justify-center overflow-hidden">
-              {product.images[selectedImage] ? (
-                <img
-                  src={product.images[selectedImage]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div className="text-8xl opacity-10">👓</div>
-                  <p className="text-xs text-[#ccc] tracking-widest uppercase">
-                    Product Image {selectedImage + 1}
-                  </p>
-                </div>
-              )}
+    {/* ── MAIN PRODUCT SECTION — starts immediately after breadcrumb ── */}
+    <section className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
 
-              {/* Nav arrows */}
-              <button
-                onClick={() =>
-                  setSelectedImage(
-                    (prev) =>
-                      (prev - 1 + product.images.length) %
-                      product.images.length,
-                  )
-                }
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white shadow-md flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() =>
-                  setSelectedImage((prev) => (prev + 1) % product.images.length)
-                }
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white shadow-md flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200"
-              >
-                <ChevronRight size={18} />
-              </button>
+        {/* LEFT — Images */}
+        <div className="flex flex-col gap-3">
+          {/* Main image */}
+          <div className="relative bg-[#f8f8f6] aspect-square flex items-center justify-center overflow-hidden rounded-sm">
+            {product.images?.[selectedImage] ? (
+              <img
+                src={product.images[selectedImage]}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-8xl opacity-10">👓</div>
+                <p className="text-xs text-[#ccc] tracking-widest uppercase">
+                  No Image
+                </p>
+              </div>
+            )}
 
-              {/* New badge */}
-              {product.isNew && (
-                <div className="absolute top-4 left-4 border border-[#4A7E96] text-[#4A7E96] text-xs px-3 py-1 tracking-[0.15em] uppercase bg-white">
-                  New
-                </div>
-              )}
-            </div>
+            {/* Nav arrows — only show if multiple images */}
+            {product.images?.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSelectedImage(prev =>
+                    (prev - 1 + product.images.length) % product.images.length
+                  )}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 shadow-md flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200 backdrop-blur-sm">
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setSelectedImage(prev =>
+                    (prev + 1) % product.images.length
+                  )}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 shadow-md flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200 backdrop-blur-sm">
+                  <ChevronRight size={16} />
+                </button>
+              </>
+            )}
 
-            {/* Thumbnails */}
-            <div className="flex gap-3 overflow-x-auto pb-1">
+            {/* New badge */}
+            {product.is_new && (
+              <div className="absolute top-3 left-3 border border-[#4A7E96] text-[#4A7E96] text-xs px-3 py-1 tracking-[0.15em] uppercase bg-white">
+                New
+              </div>
+            )}
+
+            {/* Image counter */}
+            {product.images?.length > 1 && (
+              <div className="absolute bottom-3 right-3 bg-black/40 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                {selectedImage + 1} / {product.images.length}
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {product.images?.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {product.images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`shrink-0 w-20 h-20 bg-[#f8f8f6] flex items-center justify-center border-2 transition-all duration-200 ${
+                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 bg-[#f8f8f6] flex items-center justify-center border-2 transition-all duration-200 overflow-hidden ${
                     selectedImage === i
                       ? "border-[#1a1a1a]"
                       : "border-transparent hover:border-[#d0d0d0]"
-                  }`}
-                >
+                  }`}>
                   {img ? (
-                    <img
-                      src={img}
-                      alt={`View ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-2xl opacity-20">👓</span>
+                    <span className="text-xl opacity-20">👓</span>
                   )}
                 </button>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* RIGHT — Product Info */}
+        <div className="flex flex-col">
+          {/* Category + shape tags */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs border border-[#e8e8e8] text-[#888] px-3 py-1 tracking-wide">
+              {product.category}
+            </span>
+            {product.shape && (
+              <span className="text-xs border border-[#e8e8e8] text-[#888] px-3 py-1 tracking-wide">
+                {product.shape}
+              </span>
+            )}
           </div>
 
-          {/* RIGHT — Product Info */}
-          <div className="flex flex-col">
-            {/* Rating + Sold */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    className={
-                      i < Math.floor(product.rating)
-                        ? "text-[#C9A84C] fill-[#C9A84C]"
-                        : "text-[#e0e0e0] fill-[#e0e0e0]"
-                    }
-                  />
-                ))}
-                <span className="text-sm font-medium text-[#1a1a1a] ml-1">
-                  {product.rating}
-                </span>
-                <span className="text-sm text-[#888] ml-1">
-                  · {product.reviews} Reviews
-                </span>
-              </div>
-            </div>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-[#1a1a1a] mb-3"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            {product.name}
+          </h1>
 
-            {/* Sold this month */}
-            <div className="inline-flex mb-4">
-              <span className="bg-[#f0f0f0] text-[#555] text-xs px-3 py-1 tracking-wide">
-                {product.soldThisMonth}
-              </span>
-            </div>
+          {product.variant && (
+            <p className="text-sm text-[#888] italic mb-4">{product.variant}</p>
+          )}
 
-            {/* Name */}
-            <h1
-              className="text-4xl md:text-5xl font-light text-[#1a1a1a] mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            >
-              {product.name}
-            </h1>
-
-            {/* Price */}
-            <div className="flex items-center gap-3 mb-1">
-              <p
-                className="text-2xl text-[#1a1a1a] font-light"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                ₦{product.price.toLocaleString()}
-              </p>
-              {product.prescriptionAvailable && (
-                <span className="text-sm text-[#666]">
-                  · Prescription available
-                </span>
-              )}
-            </div>
-
-            {/* Installment */}
-            <p className="text-sm text-[#888] mb-6">
-              or 4 payments of{" "}
-              <span className="text-[#1a1a1a] font-medium">
-                ₦{Math.round(product.price / 4).toLocaleString()}
-              </span>{" "}
-              ·{" "}
-              <span className="text-[#4A7E96] cursor-pointer hover:underline">
-                Learn more
-              </span>
+          <div className="flex items-center gap-3 mb-6">
+            <p className="text-2xl md:text-3xl text-[#1a1a1a] font-light"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              ₦{Number(product.price).toLocaleString()}
             </p>
+            
+          </div>
 
-            <div className="h-[1px] bg-[#e8e8e8] mb-6" />
+          <div className="h-[1px] bg-[#e8e8e8] mb-5" />
 
-            {/* Description */}
-            <p className="text-[#555] text-sm md:text-base leading-relaxed font-light mb-6">
-              {product.description}
-            </p>
+          <p className="text-[#555] text-sm md:text-base leading-relaxed font-light mb-6">
+            {product.description}
+          </p>
 
-            {/* Color selector */}
+          {/* Color selector */}
+          {product.colors?.length > 0 && (
             <div className="mb-6">
-              <p className="text-sm font-medium text-[#1a1a1a] mb-3 tracking-wide">
-                {product.colors[selectedColor].name}
+              <p className="text-xs tracking-[0.15em] uppercase text-[#888] mb-3">
+                Color — <span className="text-[#1a1a1a] font-medium normal-case tracking-normal">
+                  {product.colors[selectedColor]?.name}
+                </span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.colors.map((color, i) => (
@@ -340,186 +383,145 @@ function ProductDetail() {
                     title={color.name}
                     className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
                       selectedColor === i
-                        ? "border-[#1a1a1a] scale-110"
+                        ? "border-[#1a1a1a] scale-110 shadow-md"
                         : "border-transparent hover:border-[#d0d0d0]"
                     }`}
-                    style={{ backgroundColor: color.hex }}
-                  />
+                    style={{ backgroundColor: color.hex }} />
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Key features */}
+          {/* Features */}
+          {product.features?.length > 0 && (
             <div className="flex flex-col gap-2 mb-6">
               {product.features.map((feature, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <Check
-                    size={14}
-                    className="text-[#4A7E96] shrink-0"
-                    strokeWidth={2}
-                  />
+                  <Check size={13} className="text-[#4A7E96] shrink-0" strokeWidth={2.5} />
                   <span className="text-sm text-[#555]">{feature}</span>
                 </div>
               ))}
             </div>
+          )}
 
-            <div className="h-[1px] bg-[#e8e8e8] mb-6" />
+          <div className="h-[1px] bg-[#e8e8e8] mb-5" />
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col gap-3 mb-6">
-              <button
-                onClick={handleAddToCart}
-                className={`w-full py-4 text-sm tracking-[0.15em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3 ${
-                  added
-                    ? "bg-[#4A7E96] text-white"
-                    : "bg-[#1a1a1a] text-white hover:bg-[#4A7E96]"
-                }`}
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                <ShoppingBag size={16} strokeWidth={1.5} />
-                {added ? "Added to Cart!" : "Add to Cart"}
-              </button>
+          {/* CTA Buttons */}
+          <div className="flex flex-col gap-3 mb-6">
+            <button
+              onClick={handleAddToCart}
+              className={`w-full py-4 text-sm tracking-[0.15em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3 ${
+                added
+                  ? "bg-[#4A7E96] text-white"
+                  : "bg-[#1a1a1a] text-white hover:bg-[#4A7E96]"
+              }`}
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              <ShoppingBag size={16} strokeWidth={1.5} />
+              {added ? "Added to Cart!" : "Add to Cart"}
+            </button>
 
-              <button
-                onClick={() => setWishlist(!wishlist)}
-                className={`w-full py-4 text-sm tracking-[0.15em] uppercase font-medium border transition-all duration-300 flex items-center justify-center gap-3 ${
-                  wishlist
-                    ? "border-[#B5685A] text-[#B5685A] bg-[#B5685A]/5"
-                    : "border-[#1a1a1a] text-[#1a1a1a] hover:border-[#B5685A] hover:text-[#B5685A]"
-                }`}
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                <Heart
-                  size={16}
-                  strokeWidth={1.5}
-                  className={wishlist ? "fill-[#B5685A]" : ""}
-                />
-                {wishlist ? "Saved to Wishlist" : "Add to Wishlist"}
-              </button>
+            <button
+              onClick={handleWishlist}
+              className={`w-full py-4 text-sm tracking-[0.15em] uppercase font-medium border transition-all duration-300 flex items-center justify-center gap-3 ${
+                inWishlist
+                  ? "border-[#B5685A] text-[#B5685A] bg-[#B5685A]/5"
+                  : "border-[#1a1a1a] text-[#1a1a1a] hover:border-[#B5685A] hover:text-[#B5685A]"
+              }`}
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              <Heart size={16} strokeWidth={1.5} className={inWishlist ? "fill-[#B5685A]" : ""} />
+              {inWishlist ? "Saved to Wishlist" : "Add to Wishlist"}
+            </button>
 
-              <button
-                onClick={() => setShowTryOn(true)}
-                className="w-full py-4 text-sm tracking-[0.15em] uppercase font-medium border border-[#e8e8e8] text-[#1a1a1a] hover:border-[#4A7E96] hover:text-[#4A7E96] transition-all duration-300 flex items-center justify-center gap-3"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                <Camera size={16} strokeWidth={1.5} />
-                Live Try-On
-              </button>
-            </div>
+            {/* Mobile Try-On button */}
+            <button
+              onClick={() => setShowTryOn(true)}
+              className="sm:hidden w-full py-4 text-sm tracking-[0.15em] uppercase font-medium border border-[#e8e8e8] text-[#1a1a1a] hover:border-[#4A7E96] hover:text-[#4A7E96] transition-all duration-300 flex items-center justify-center gap-3"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              <Camera size={16} strokeWidth={1.5} />
+              Live Try-On
+            </button>
+          </div>
 
-            {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[
-                {
-                  icon: <Shield size={20} strokeWidth={1.2} />,
-                  label: "Secure Payments",
-                },
-                {
-                  icon: <RotateCcw size={20} strokeWidth={1.2} />,
-                  label: "30-Day Returns",
-                },
-                {
-                  icon: <Truck size={20} strokeWidth={1.2} />,
-                  label: "Free Delivery",
-                },
-              ].map((badge) => (
-                <div
-                  key={badge.label}
-                  className="flex flex-col items-center gap-2 text-center border border-[#e8e8e8] py-4 px-2"
-                >
-                  <div className="text-[#4A7E96]">{badge.icon}</div>
-                  <span className="text-xs text-[#666] leading-tight">
-                    {badge.label}
+          {/* Trust badges */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { icon: <Shield size={18} strokeWidth={1.2} />, label: "Secure Payments" },
+              { icon: <RotateCcw size={18} strokeWidth={1.2} />, label: "30-Day Returns" },
+              { icon: <Truck size={18} strokeWidth={1.2} />, label: "Fast Delivery" },
+            ].map(badge => (
+              <div key={badge.label}
+                className="flex flex-col items-center gap-2 text-center border border-[#e8e8e8] py-3 px-2">
+                <div className="text-[#4A7E96]">{badge.icon}</div>
+                <span className="text-xs text-[#666] leading-tight">{badge.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="h-[1px] bg-[#e8e8e8] mb-4" />
+
+          {/* Accordion */}
+          <div className="flex flex-col">
+            {accordionSections.map((section, i) => (
+              <div key={i} className="border-b border-[#e8e8e8]">
+                <button
+                  onClick={() => setOpenSection(openSection === i ? null : i)}
+                  className="w-full flex items-center justify-between py-4 text-left group">
+                  <span className="text-sm font-medium text-[#1a1a1a] tracking-wide group-hover:text-[#4A7E96] transition-colors">
+                    {section.title}
                   </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="h-[1px] bg-[#e8e8e8] mb-4" />
-
-            {/* Accordion sections */}
-            <div className="flex flex-col">
-              {accordionSections.map((section, i) => (
-                <div key={i} className="border-b border-[#e8e8e8]">
-                  <button
-                    onClick={() => setOpenSection(openSection === i ? null : i)}
-                    className="w-full flex items-center justify-between py-4 text-left group"
-                  >
-                    <span className="text-sm font-medium text-[#1a1a1a] tracking-wide group-hover:text-[#4A7E96] transition-colors">
-                      {section.title}
-                    </span>
-                    {openSection === i ? (
-                      <Minus
-                        size={16}
-                        strokeWidth={1.5}
-                        className="text-[#4A7E96] shrink-0"
-                      />
-                    ) : (
-                      <Plus
-                        size={16}
-                        strokeWidth={1.5}
-                        className="text-[#888] shrink-0"
-                      />
-                    )}
-                  </button>
-                  {openSection === i && (
-                    <div className="pb-6">{section.content}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SUGGESTED PRODUCTS ── */}
-      <section className="bg-[#f8f8f6] py-16 md:py-24 mt-16">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <p
-                className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-2"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                You May Also Like
-              </p>
-              <h2
-                className="text-2xl md:text-3xl font-light text-[#1a1a1a]"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
-                Similar Styles
-              </h2>
-            </div>
-            <Link
-              to="/shop"
-              className="text-xs tracking-[0.15em] uppercase text-[#4A7E96] hover:text-[#B5685A] transition-colors font-medium hidden md:block"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            >
-              View All →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
-            {relatedProducts.map((product) => (
-              <Link key={product.id} to={`/shop/${product.slug}`}>
-                <ProductCard
-                  name={product.name}
-                  variant={product.variant}
-                  price={product.price}
-                  isNew={product.isNew}
-                  image={product.images[0]}
-                  hoverImage={product.hoverImage}
-                />
-              </Link>
+                  {openSection === i
+                    ? <Minus size={15} strokeWidth={1.5} className="text-[#4A7E96] shrink-0" />
+                    : <Plus size={15} strokeWidth={1.5} className="text-[#888] shrink-0" />
+                  }
+                </button>
+                {openSection === i && <div className="pb-6">{section.content}</div>}
+              </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      {showTryOn && (
-        <TryOn product={product} onClose={() => setShowTryOn(false)} />
-      )}
-    </main>
+    {/* Related Products */}
+    <section className="bg-[#f8f8f6] py-16 md:py-24">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <p className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-2"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              You May Also Like
+            </p>
+            <h2 className="text-2xl md:text-3xl font-light text-[#1a1a1a]"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              Similar Styles
+            </h2>
+          </div>
+          <Link to="/shop"
+            className="text-xs tracking-[0.15em] uppercase text-[#4A7E96] hover:text-[#B5685A] transition-colors font-medium hidden md:block"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            View All →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+          {relatedProducts.map(p => (
+            <Link key={p.id} to={`/shop/${p.slug}`}>
+              <ProductCard
+                name={p.name}
+                variant={p.variant}
+                price={p.price}
+                isNew={p.is_new}
+                image={p.images?.[0]}
+                hoverImage={p.hoverImage}
+              />
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {showTryOn && <TryOn product={product} onClose={() => setShowTryOn(false)} />}
+  </main>
   );
 }
 

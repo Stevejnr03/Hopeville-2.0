@@ -49,10 +49,6 @@ function ServiceDetail() {
     
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16 pt-40 relative z-10 w-full">
-              <p className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-4"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-            Our Services
-          </p>
           <h1 className="text-3xl md:text-5xl font-light text-white leading-tight max-w-2xl"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
             {service.title}
@@ -67,7 +63,7 @@ function ServiceDetail() {
 
           {/* Main Content */}
           <div className="md:col-span-2">
-            <p className="text-[#444] text-base md:text-lg leading-relaxed font-light mb-12">
+            <p className="text-[#444] text-base  leading-relaxed font-light mb-12">
               {service.heroDesc}
             </p>
 

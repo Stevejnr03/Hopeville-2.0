@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa6";
 
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import services from "../data/services";
 
 function Footer() {
   const quickLinks = [
@@ -20,14 +21,6 @@ function Footer() {
     { name: "Book Appointment", path: "/book" },
   ];
 
-  const services = [
-    "Complete Eye Health Diagnostics",
-    "Retinal Evaluation",
-    "Diabetic & Hypertensive Vision Care",
-    "Cataract & Glaucoma Co. Management",
-    "Dry Eye Clinic",
-    "Luxury Eyewear & Optical Services",
-  ];
 
   return (
     <footer className="bg-[#0d1f2d] text-white">
@@ -135,13 +128,13 @@ function Footer() {
             </h4>
             <ul className="flex flex-col gap-3">
               {services.map((service) => (
-                <li key={service}>
+                <li key={service.id}>
                   <Link
-                    to="/services"
+                    to={`/services/${service.slug}`}
                     className="text-white/60 text-sm hover:text-[#4A7E96] transition-colors duration-200 font-light flex items-center gap-2 group"
                   >
                     <span className="w-4 h-[1px] bg-white/20 group-hover:bg-[#4A7E96] group-hover:w-6 transition-all duration-300 shrink-0" />
-                    {service}
+                    {service.title}
                   </Link>
                 </li>
               ))}

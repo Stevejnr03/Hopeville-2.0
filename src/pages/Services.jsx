@@ -31,10 +31,7 @@ function Services() {
 
   {/* Content */}
   <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16 pt-40 relative z-10 w-full">
-          <p className="text-[#B5685A] text-xs tracking-[0.35em] uppercase mb-4"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-            What we offer
-          </p>
+          
           <h1 className="text-4xl md:text-6xl font-light text-white leading-tight max-w-2xl"
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
             Our Services
@@ -54,7 +51,7 @@ function Services() {
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
             Everything Your Eyes Need, Under One Roof
           </h2>
-          <p className="text-[#666] text-base md:text-lg leading-relaxed font-light">
+          <p className="text-[#666] text-base  leading-relaxed font-light">
             From routine eye examinations to specialized clinical care and luxury eyewear, Hopeville Eye Clinic offers a complete range of vision services delivered with clinical excellence and a patient-first approach.
           </p>
         </div>
@@ -99,7 +96,7 @@ function Services() {
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
             Book Your Appointment Today
           </h2>
-          <p className="text-white/70 text-base md:text-lg font-light mb-10 max-w-xl mx-auto">
+          <p className="text-white/70 text-base  font-light mb-10 max-w-xl mx-auto">
             Our specialists are ready to provide you with the highest standard of eye care. Schedule your visit today.
           </p>
           <Link to="/book"
