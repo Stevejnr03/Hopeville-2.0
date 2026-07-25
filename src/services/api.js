@@ -1,7 +1,5 @@
 const BASE_URL = `${import.meta.env.VITE_API_URL}`;
 
-console.log(BASE_URL);
-
 
 function getToken() {
   return localStorage.getItem("token");
