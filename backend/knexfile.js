@@ -10,13 +10,22 @@ export default {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     },
     migrations: { directory: "./src/db/migrations" },
     seeds: { directory: "./src/db/seeds" },
   },
+
   production: {
     client: "pg",
-    connection: process.env.DATABASE_URL,
+    connection: {
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
     migrations: { directory: "./src/db/migrations" },
     seeds: { directory: "./src/db/seeds" },
   },
