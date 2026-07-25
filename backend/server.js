@@ -17,7 +17,6 @@ import passport from "./src/config/passport.js";
 
 import contactRoute from "./src/routes/contact.js";
 
-
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,10 +25,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", process.env.CLIENT_URL],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(passport.initialize());
 app.use(express.urlencoded({ extended: true }));
@@ -47,7 +48,6 @@ app.use("/api/blog", blogRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/contact", contactRoute);
-
 
 // Health check
 app.get("/api/health", (req, res) => {
