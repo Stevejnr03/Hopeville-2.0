@@ -27,7 +27,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", process.env.CLIENT_URL, "https://hopeville-2-0.onrender.com"],
+    origin: ["http://localhost:5173", "https://hopeville-2-0.onrender.com"],
     credentials: true,
   }),
 );
